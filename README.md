@@ -1,45 +1,230 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+#PGCNA
+##Introduction
+PGCNA (parsimonious gene correlation network analysis) is a gene correlation network analysis approach that is computationally simple yet yields stable and biologically meaningful modules and allows visualisation of very large networks, showing substructure and relationships that are normally hard to see.  The parsimonious approach, retaining the 3 most correlated edges per gene, results in a vast reduction in network complexity meaning that large networks can be clustered quickly and reduced to a small output file that can be used by downstream software.
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+##Citation
+For more details see:
+[Care, M.A., Westhead, D.R., and Tooze, R.M. (2018). **Defining common principles of gene co-expression refines molecular stratification in cancer**. BioRxiv 372557](https://www.biorxiv.org/content/early/2018/07/19/372557).
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+Please cite this when using PGCNA.
+####Paper website
+PGCNA paper website: [http://pgcna.gets-it.net](http://pgcna.gets-it.net)
 
----
 
-## Edit a file
+----------
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+##Requirements
+Python 2.7 and the following non-standard packages : numpy and h5py.
+I recommend the Anaconda distribution ([https://www.anaconda.com/download/](https://www.anaconda.com/download/)), which comes with both numpy and h5py included.  This script has been tested on Windows 10 (Python 2.7.14, numpy 1.15.4 and h5py 2.8.0) and Linux CentOS 6.9 (python 2.7.13, numpy 1.13.1 and h5py 2.7.0).
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+###Optional, but recommended
+Pgcna.py can be run without generating modules (**--noFastUF**) if all you require is output for network visualisation tools (e.g. Gephi/Cytoscape).
 
----
+####Fast unfolding of communities in large networks (Louvain)
+To carry out clustering you will require the additional package **Louvain** ([Blondel, V.D., Guillaume, J.-L., Lambiotte, R., and Lefebvre, E. (2008). **Fast unfolding of communities in large networks**. J. Stat. Mech. Theory Exp. 2008, P10008.](https://arxiv.org/abs/0803.0476)).  This can be downloaded here: [https://sourceforge.net/projects/louvain/files/louvain-generic.tar.gz/download](https://sourceforge.net/projects/louvain/files/louvain-generic.tar.gz/download).  Please make sure that you've downloaded v0.3 (see package README.txt).
 
-## Create a file
+#####Example installation
+On Linux CentOS
+```
+$ wget https://sourceforge.net/projects/louvain/files/louvain-generic.tar.gz
+$ tar -xvzf louvain-generic.tar.gz
+$ cd louvain-generic
+$ make
+```
+Copy **louvain**, **convert** and **hierarchy** into your bin folder.
 
-Next, you’ll add a new file to this repository.
+####Gephi
+For visualising the output of PGCNA we highly recommend using Gephi ([https://gephi.org/](https://gephi.org/)) which is able to layout large networks very efficiently.  It has the added bonus that it includes the **louvain/FastUnfold** method to quickly visualise the modularity of the network.  See **Examples** below for details of loading the output from pgcna.py into Gephi and analysing it.
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+----------
 
----
 
-## Clone a repository
+##Installation
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
+Using Mercurial: 
 
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
+```
+hg clone https://mcare@bitbucket.org/mcare/pythonscripts-pgcna
+```
 
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+Manual download: [https://bitbucket.org/mcare/pythonscripts-pgcna/downloads/](https://bitbucket.org/mcare/pythonscripts-pgcna/downloads/)
+
+
+----------
+
+
+##Overview
+We have endeavoured to make the process of using PGCNA as simple as possible, intentionally limiting the number of options so that users are not overwhelmed with choices.  The default parameters will give good results -- most users will only want to alter the **--corrChunk** option depending on amount of available RAM.
+
+
+##Usage
+###Input file
+The input file for PGCNA should be an expression file that has the format of unique identifiers (genes/probes etc.) in the first column, with the remaining columns containing the expression values across the samples.  Redundancy of identifiers is not allowed and must be dealt with before processing with PGCNA.  The default is for a tab separated file with a single line of header -- however, this can be altered with the (--fileSep and --headerL paramters respectively).
+
+
+PGCNA is run via the **pgcna.py** script:
+
+###Basic run
+On windows
+```
+python pgcna.py -w workFolderPath -d expressionFilePath
+```
+
+On linux
+```
+./pgcna.py -w workFolderPath -d expressionFilePath
+```
+
+###Common options
+####Retain all genes
+With default setting PGCNA will only retain the top 80% most variable genes in the expression data for analysis.  If the input expression files has been pre-filtered to remove invariant genes you may want to process all of the data, this can be acomplished using the -f/--retainF parameters:
+
+```
+./pgcna.py -w workFolderPath -d expressionFilePath --retainF 1
+```
+
+####Run without clustering
+If you don't have **louvain** package installed and wish to generate output for downstream tools you can still run PGCNA with the following command:
+
+```
+./pgcna.py -w workFolderPath -d expressionFilePath --noFastUF
+```
+
+####Changing input file separator and header size
+The default input format is a tab ("\t") separated file with a single header line.  This can be changed with the **--fileSep** and **--headerL** parameters, so for a .csv file with 3 header lines:
+```
+./pgcna.py -w workFolderPath -d expressionFilePath --fileSep "," --headerL 3
+```
+
+####Changing the number of retained edges
+The default is to retain the top 3 edges per gene, and in our paper we show that there is no benefit from increasing this.  However, should users wish to increase this they can using the **--edgePG** parameter.  Increasing the number of edges will result in the **louvain/fastUnfol** method generating fewer modules, yet these modules will be super sets of modules produced with fewer edges.
+
+To run PGCNA retaining 5 edges 
+
+
+```
+./pgcna.py -w workFolderPath -d expressionFilePath --edgePG
+```
+
+####Louvain/FastUnfold options
+By default PGCNA will run 100 clusterings of the data using louvain and will then process the best one (judged by louvain modularity score).  Users may wish to increase both the number of clusterings of the network that are carried out and the fraction retained for downstream processing.
+
+For instance to run 1000 clusterings and retain the top 10:
+
+```
+./pgcna.py -w workFolderPath -d expressionFilePath -n 1000 -r 10
+```
+
+See **Output** for information on all downstream files.
+
+
+----------
+
+
+##Parameters
+
+Complete list of parameters and their default values.
+
+Can also use build in help flag:
+```
+./pgcna.py -h
+```
+
+###Required
+|Parameter|Description|Default Value| 
+|---|---|---|
+|-w, --workFolder|Base folder for all output|**Required**|
+|-d, --dataF|Expression data file path|**Required**|
+
+###Input file related
+|Parameter|Description|Default Value| 
+|---|---|---|
+|-s, --fileSep|Separator used in expression file|"\t"|
+|--headerL|Number of header lines before expression values|1|
+|-f, --retainF|Retain gene fraction -- keeping most variant genes|0.8|
+|-e, --edgePG|Edges to keep per gene -- **Highly recommend leaving as default**|3|
+
+###Folders
+|Parameter|Description|Default Value| 
+|---|---|---|
+|--outF|Root output folder|"PGCNA"|
+|--corrMatF|Correlation matrix folder -- where HDF5 files are stored|"CORR_MATRIX"|
+|--gephiF|Folder to store files for Gephi|"GEPHI"|
+|--fastUF|Folder for fast unfolding clustering output|"FAST_UNFOLD"|
+
+###Control usage
+|Parameter|Description|Default Value| 
+|---|---|---|
+|--noFastUF|Flag -- don't run Fast Unfolding clustering but complete everything else|False|
+|--usePearson|Flag -- Instead of Spearman's ranked correlation coefficient calculate Pearson's|False|
+|--keepBigF|Flag -- Retain big HDF5 files after finishing, if needed for independent downstream analysis|False|
+|--corrChunk|Size of chunk to split correlation problem over -- higher values will speed up correlation calculation at the cost of RAM|5000|
+
+###Clustering related
+|Parameter|Description|Default Value| 
+|---|---|---|
+|-n, --fuNumber|Number of times to run **louvain/FastUnfold** method|100|
+|-r, --fuRetain|How many of the best (based on louvain modularity) clusterings to process|1|
+|--fuRenumberStart|For clusters retained (--fuRetain), what value to start numbering them from|1|
+|--tOutFold|FastUnfold Trees output folder|"Trees"|
+|--fTOutFold|FastUnfold final retained (--fuRetain) trees output folder|"TreesF"|
+|--cOutFold|FastUnfold clusters folder|"Clusters"|
+|--cOutTxtFold|FastUnfold clusters mapped back to genes|"ClustersTxt"|
+|--cOutListsFold|FastUnfold clusters mapped back to genes and split into individual text files|"ClustersLists"|
+
+
+###Output
+If PGCNA is run using default settings, the root folder (-w, --workFolder) will contain the following:
+
+* EPG3 (Edge per gene 3 folder)
+	* *CorrelationSettingsInfo.txt : timestamped file containing parameters used for run.
+	* CORR_MATRIX (if --keepBigF) : contains the temporary files used for calculating correlations
+		* *_RetainF*.h5 : The HDF5 file of all pairwise correlations after edge reduction
+		* *_RetainF*_Genes.txt : Genes that remain after -f/--retainF filtering ordered by decending standard deviation
+	* FAST_UNFOLD : Root folder for output from fast unfold
+		* *retainF1.0_EPG3 : folder specific to an input data file
+			* Clusters : Clusters output by the FastUnfold **hierarchy** tool
+			* **ClustersLists** : Contains subfolders for the -r/--fuRetain number of "best" clusterings.  Each subfolder contains genes split across the modules (M1...M*.txt)
+			* **ClustersTxt** : Contains the -r/--fuRetain number of "best" clusterings as individual *.csv files
+			* GeneIntMap.txt : Mapping of gene to numbers, required to get back to gene names after processing with **louvain**
+			* modScores.txt : Modularity scores across all clustering -- used to rank Clusters by and select "best" to retain (-r/--fuRetain)
+			* sym_edges.bin : binary version of sym_edges.txt output by FastUnfold **convert** tool and required by **louvain**
+			* sym_edges.txt : gene pairs (encoded as numbers, see GeneIntMap.txt) along with their correlation score.
+			* sym_edges.weights | Edge weights, output by FastUnfold **convert** tool and require by **louvain**
+			* Trees: Trees output by **louvain**
+			* TreesF: Contains the -r/--fuRetain number of "best" trees.
+	* **GEPHI**: contains files for processing with Gephi package ([https://gephi.org/](https://gephi.org/))
+		* *_RetainF1.0_EPG3_Edges.tsv : Tab separated file of edges
+		* *_RetainF1.0_EPG3_Nodes.tsv : Tab separated file of nodes
+
+The most important folders for users are highlighted in **bold**.
+
+
+##Examples
+
+###Gephi Visualisation
+To visualise the output from PGCNA in Gephi is quite straightforward (correct for Gephi V0.92):
+
+1. Open Gephi
+2. Select File/"New Project"
+3. Select "Data Table" (tab above screen centre)
+4. Select "Import Spreadsheet"
+	1. Select *_RetainF1.0_EPG3_Nodes.tsv , make sure "Import as": "Nodes table", click **Next** and then **Finish**.  Hopefully should import with no issues, select **OK**
+	2. Repeat with *_RetainF1.0_EPG3_Nodes.tsv, making sure that "Import as" : "Edges table", click **Next** and then **Finish**.  Hopefully should import with no issues, select **OK**
+5. Click "Graph" (tab above screen centre) -- you should now see a massive blob of nodes in the screen centre
+6. Under Statistics/NetworkOverview (right of screen) select **Modularity**.  This will run the built in version of the FastUnfolding/louvain method.
+	1. Each run will generate a different clustering, the higher the score the better the clustering is perceived to be.
+7. Select Appearance/Partition (left of screen) and select "Modularity Class" from drop-down list
+	1. Click Palette button in the bottom right of this panel and select Generate. Untick "Limit number of colors" and then select **OK**.
+	2. If you want you can manually change any of the resultant colours by left clicking on them and dragging the mouse around.
+	3. When you're happy with the range of colours select **Apply** button.
+8. To layout the network:
+	1. Under **Layout** (left middle of screen) select **ForceAtlas2**
+	2. For big networks set the following ("Approximate Repulsion":selected, Scaling:<1 often as small as 0.1, "LinLog mode":selected and importantly "Prevent Overlap":**not** selected).
+	3. Wait until network layout has finished (You may need to alter **Scaling** if all nodes are pushed to the edge of the screen.)
+	4. Once you're happy with the network set "Prevent Overlap":selected to finally prevent node overlaps.
+
+
+##Feedback and questions
+If you have any queries or notice any bugs please email me at **m.a.care@leeds.ac.uk** (please include PGCNA in the subject heading).
