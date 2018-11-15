@@ -55,6 +55,7 @@ parser.add_argument("--fastUF",help="Fast Unfolding folder [FAST_UNFOLD]",defaul
 parser.add_argument("--noFastUF",help="Don't try to run Fast Unfolding Clustering, but complete everything else [False] -- Flag",action="store_true")
 parser.add_argument("--usePearson",help="Use Pearson Correlation instead of Spearman [False] -- Flag",action="store_true")
 parser.add_argument("--keepBigF",help="Keep big HDF5 files after finishing [False] -- Flag",action="store_true")
+parser.add_argument("--ignoreDuplicates",help="Ignore correlation duplicates when cutting top --edgePG genes [False] -- Flag, faster if set",action="store_true")
 
 #  Correlation related
 parser.add_argument("--corrChunk",dest="corrChunk",help="Size of chunk (rows) to split correlation problem over [5000] -- Higher will speed up correlation calculation at cost of RAM",default=5000,type=float)
@@ -155,6 +156,7 @@ settingInf = concatenateAsString(
 	"Don't run Fast Unfolding clustering [--noFastUF] = " + str(args.noFastUF),
 	"Use Pearson Correlation [--usePearson] = " + str(args.usePearson),
 	"Keep big HDF5 files after run [--keepBigF] = " + str(args.keepBigF),
+	"Ignore correlation duplicates when cutting top --edgePG genes [--ignoreDuplicates] = " + str(args.ignoreDuplicates),
 	"\n#  Correlation Options",
 	"Chunk size (rows) to split correlation over [--corrChunk]:\t" + str(args.corrChunk),
 	"\n#  Fast-Unfolding Specific",
@@ -315,10 +317,38 @@ def generateCorrMatrix(workF,dataF,retainF=0.8,corrMatF="CORR_MATRIX",usePearson
 	return outMatrixHDF5, genesNP
 
 
-def reduceEdges(workF,dataF,gephiF,corrh5,genesM,retainF=0.8,edgePG=3,printEveryDiv=10,corrMatF=None,keepBigF=False):
+def reduceEdges(workF,dataF,gephiF,corrh5,genesM,retainF=0.8,edgePG=3,printEveryDiv=10,corrMatF=None,keepBigF=False,ignoreDuplicates=False):
 	"""
 	Reduce edges in correlation matrix, only retaining edgePG maximum correlated genes per row
 	"""
+	
+	def bottomToZero(npA,n=1):
+		"""
+		Set everything below n to zero
+		"""
+		topI = np.argpartition(npA,-n)
+		npA[topI[:-n]] = 0
+		return npA
+
+	def bottomToZeroWithDuplicates(npA,n=1):
+		"""
+		Set everything below n to zero,
+		but deal with duplicates
+		"""
+		unique = np.unique(npA)
+		topIunique = np.argpartition(unique,-n)[-n:]
+
+		toKeep = []
+		for val in unique[topIunique]:
+			toKeep.extend(np.where(npA == val)[0])
+
+		#  Mask and reverse
+		mask = np.ones(len(npA),np.bool)
+		mask[toKeep] = 0
+		npA[mask] = 0
+
+		return npA
+
 	fileN = os.path.basename(dataF)
 
 	print("\tLoad HDF5 file")
@@ -340,28 +370,10 @@ def reduceEdges(workF,dataF,gephiF,corrh5,genesM,retainF=0.8,edgePG=3,printEvery
 			printE = printE + tell
 			print("\t\t",count)
 
-		sortI = np.argsort(row)[::-1]  # Descending
-		
-		# Need to find last index with same value (in case have a run of exactly the same correlation)
-		tmp = row[sortI]
-		maxI = edgePG  # Set off from last but one element
-		lastElement = tmp[maxI]
-		try:
-			while True:
-				maxI += 1
-				if maxI == row.shape[0]:
-					break
-				if not tmp[maxI] == lastElement:
-					maxI -= 1
-					break
-		except IndexError:
-			print("Error:",row.shape,tmp)
-			sys.exit()
-
-		# Set all other values to zero
-		t = h5["corr"][i]  # Need to create a temporary copy, as h5 doesn't like writing to a sorted range.
-		t[sortI[maxI+1:]] = 0
-		h5["corr"][i] = t
+		if ignoreDuplicates:
+			h5["corr"][i] = bottomToZero(row,edgePG + 1)
+		else:
+			h5["corr"][i] = bottomToZeroWithDuplicates(row,edgePG + 1)
 
 	# Write output out for debugging
 	# finalCorr = np.copy(h5EPG["corr"][:])
@@ -678,7 +690,7 @@ def main(finishT="Finished!"):
 	corrh5,genesM = generateCorrMatrix(OUT_FOLDER,args.dataF,retainF=args.retainF,corrMatF=args.corrMatF,usePearson=args.usePearson,corrChunk=args.corrChunk,splitBy=args.fileSep,headerL=args.headerL)
 	
 	#  Reduce edges
-	edgesFP,nodesFP = reduceEdges(OUT_FOLDER,args.dataF,args.gephiF,corrh5,genesM,retainF=args.retainF,edgePG=args.edgePG,corrMatF=args.corrMatF,keepBigF=args.keepBigF)
+	edgesFP,nodesFP = reduceEdges(OUT_FOLDER,args.dataF,args.gephiF,corrh5,genesM,retainF=args.retainF,edgePG=args.edgePG,corrMatF=args.corrMatF,keepBigF=args.keepBigF,ignoreDuplicates=args.ignoreDuplicates)
 	
 	#  Prepare and run Fast Unfolding Of Communities in Large Networks (https://sourceforge.net/projects/louvain/files/louvain-generic.tar.gz/download)
 	outFP1,outFP2 = prepareFastUnfold(OUT_FOLDER,args.dataF,args.fastUF,edgesFP,retainF=args.retainF,edgePG=args.edgePG)
