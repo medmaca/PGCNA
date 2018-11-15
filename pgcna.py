@@ -57,11 +57,11 @@ parser.add_argument("--usePearson",help="Use Pearson Correlation instead of Spea
 parser.add_argument("--keepBigF",help="Keep big HDF5 files after finishing [False] -- Flag",action="store_true")
 
 #  Correlation related
-parser.add_argument("--corrChunk",dest="corrChunk",help="Size of chunk (rows) to split correlation problem over [5000] -- Higher will speed up correlation calculation at cost of RAM",default=5000,type=int)
+parser.add_argument("--corrChunk",dest="corrChunk",help="Size of chunk (rows) to split correlation problem over [5000] -- Higher will speed up correlation calculation at cost of RAM",default=5000,type=float)
 
 #  FastUnfolding specific
-parser.add_argument("-n","--fuNumber",dest="fuRunNum",help="Number of times to run [100]",default=100,type=int)
-parser.add_argument("-r","--fuRetain",dest="fuRetainNum",help="Retain top [1] clusterings",default=1,type=int)
+parser.add_argument("-n","--fuNumber",dest="fuRunNum",help="Number of times to run [100]",default=100,type=float)
+parser.add_argument("-r","--fuRetain",dest="fuRetainNum",help="Retain top [1] clusterings",default=1,type=float)
 parser.add_argument("--fuRenumberStart",dest="fuRenumberStart",help="FU clustering re-numbering start [1]",default=1,type=int)
 parser.add_argument("--tOutFold",dest="tOutFold",help="Trees Ouput folder [Trees]",default="Trees")
 parser.add_argument("--fTOutFold",dest="fTOutFold",help="Final retained Trees Ouput folder [TreesF]",default="TreesF")
@@ -111,10 +111,12 @@ if not args.noFastUF:
 		print("\nCouldn't run Fast unfold commands (louvainn, convert and hierarchy) must be in your path/environment (to skip clustering step use --noFastUF flag), see readme for more information")
 		sys.exit()
 ###########################################################################################
-
+#  Tidy input
 #  Decode fileSep for passed "\t"
 args.fileSep = args.fileSep.decode('string-escape')
-
+args.corrChunk = int(round(args.corrChunk,0))
+args.fuRunNum = int(round(args.fuRunNum,0))
+args.fuRetainNum = int(round(args.fuRetainNum,0))
 ##----------------------------------------LOGGER----------------------------------------##
 
 
@@ -193,6 +195,8 @@ def generateCorrMatrix(workF,dataF,retainF=0.8,corrMatF="CORR_MATRIX",usePearson
 	reduce memory useage, keeping most data residing on the hard disk.
 	"""
 	print("\n\nGenerate correlations for expression data:")
+
+
 
 	# Create subfolder
 	outF = os.path.join(workF,corrMatF)
