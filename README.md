@@ -178,6 +178,7 @@ Can also use build in help flag:
 |--usePearson|Flag -- Instead of Spearman's ranked correlation coefficient calculate Pearson's|False|
 |--keepBigF|Flag -- Retain big HDF5 files after finishing, if needed for independent downstream analysis|False|
 |--corrChunk|Size of chunk to split correlation problem over -- higher values will speed up correlation calculation at the cost of RAM|5000|
+|--ignoreDuplicates|Ignore correlation duplicates when cutting top --edgePG genes, faster if set but may miss genes if correlations are duplicated|False|
 
 ###Clustering related
 |Parameter|Description|Default Value| 
