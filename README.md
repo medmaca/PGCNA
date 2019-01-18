@@ -109,7 +109,7 @@ On linux
 ###Common options
 
 ####Alter RAM requirements (--corrChunk)
-Within the PGCNA method the step that requires the most RAM is calculating the pairwise correlations.  For a small number of genes (<=20,000) this is easily carried out in memory, but this increases dramatically with increasing gene/probe numbers: 2x10^4 = 3GB, 4x10^4 = 12GB, 6x10^4 = 27GB, 8x10^4 = 48GB, 1x10^5 = 75GB etc.  PGCNA carries out only a small portion of processing in memory, breaking the large correlation problem into chunks.  This means that with default settings (--corrChunk 5000) PGCNA can process a 2x10<sup>5</sup> matrix in <1GB or RAM, rather than the 300GB that would be required using memory alone.
+Within the PGCNA method the step that requires the most RAM is calculating the pairwise correlations.  For a small number of genes (<=20,000) this is easily carried out in memory, but this increases dramatically with increasing gene/probe numbers: 2x10^4 = 3GB, 4x10^4 = 12GB, 6x10^4 = 27GB, 8x10^4 = 48GB, 1x10^5 = 75GB etc.  PGCNA carries out only a small portion of processing in memory, breaking the large correlation problem into chunks.  This means that with default settings (--corrChunk 5000) PGCNA can process a 2x10^5 matrix in <1GB or RAM, rather than the 300GB that would be required using memory alone.
 
 When processing larger matrices the user can choose to increase **--corrChunk** if they want to utilise more memory for calculating the correlation.  While this will speed up the correlation step, it should be noted that as this is only one step in the PGCNA process and thus the total time saving may be minor.
 
