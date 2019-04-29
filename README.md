@@ -4,7 +4,7 @@ PGCNA is a gene correlation network analysis approach that is computationally si
 
 ##Citation
 For more details see:
-[Care, M.A., Westhead, D.R., and Tooze, R.M. (2018). **Defining common principles of gene co-expression refines molecular stratification in cancer**. BioRxiv 372557](https://www.biorxiv.org/content/early/2018/07/19/372557).
+[Care, M.A., Westhead, D.R., Tooze, R.M., 2019. Parsimonious Gene Correlation Network Analysis (PGCNA): a tool to define modular gene co-expression for refined molecular stratification in cancer. npj Syst. Biol. Appl. 5, 13. https://doi.org/10.1038/s41540-019-0090-7](https://www.nature.com/articles/s41540-019-0090-7).
 
 Please cite this when using PGCNA.
 ####Paper website
