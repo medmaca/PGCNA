@@ -27,6 +27,9 @@ improved Leidenalg community detection method (https://arxiv.org/abs/1810.08473)
 over the Louvain community detection method used originally.
 
 """
+__author__="Matthew Care"
+__version__ = "2.0.0"
+
 import sys
 import os
 import argparse

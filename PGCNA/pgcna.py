@@ -19,6 +19,8 @@ A memory efficient implementation of PGCNA, that requires very little RAM
 to process very large expression data-sets.
 """
 from __future__ import print_function
+__author__="Matthew Care"
+__version__ = "1.0.0"
 
 import sys
 import os

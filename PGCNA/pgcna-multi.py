@@ -22,6 +22,8 @@ This version is for processing multiple data-sets, via calculating a
 median correlation matrix.
 """
 from __future__ import print_function
+__author__="Matthew Care"
+__version__ = "1.0.0"
 
 import sys
 import os
