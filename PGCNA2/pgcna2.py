@@ -387,7 +387,7 @@ def getGenes(metaInf, splitBy="\t", geneFrac=1/3.0, retainF=0.8):
 		print("\tReading expression data file:", fileN)
 
 		for i, line in enumerate(open(fileP)):
-			cols = line.rstrip().replace('"', '').replace("'", '').split(splitBy)
+			cols = line.rstrip().replace('"', '').replace("'", '').replace(' ','').split(splitBy)
 
 			if headerL:
 				headerL -= 1
@@ -525,7 +525,7 @@ def generateCorrMatrix(workF, metaInf, genesToKeep, requiredFileNum, singleCorrL
 		print("\tReading expression data file:", fileN)
 
 		for i, line in enumerate(open(fileP)):
-			cols = line.rstrip().replace('"', '').replace("'", '').split(splitBy)
+			cols = line.rstrip().replace('"', '').replace("'", '').replace(' ','').split(splitBy)
 
 			if headerL:
 				headerL -= 1
