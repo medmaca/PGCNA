@@ -840,6 +840,12 @@ def reduceEdges(workF, dataF, gephiF, corrh5, genesM, retainF=0.8, edgePG=3, pri
 	###########################################################################################
 
 	print("\tLoad HDF5 file")
+
+	if (keepBigFA or keepBigF): 
+		#  Backup original raw correlations before edge reduction
+		corrh5_raw = corrh5[:-3] + "_NoEdgeReduction.h5"
+		shutil.copy(corrh5,corrh5_raw)
+
 	#  Load old HDF5
 	h5 = h5py.File(corrh5, 'r+')
 	rowN, colN = h5["corr"].shape
