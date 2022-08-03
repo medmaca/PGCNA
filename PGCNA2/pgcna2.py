@@ -28,7 +28,7 @@ over the Louvain community detection method used originally.
 
 """
 __author__="Matthew Care"
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 import sys
 import os
@@ -231,9 +231,9 @@ def dataSpread(x):
 	Returns the min, Q1 (25%), median (Q2), Q3 (75%), max, IQR, Quartile Coefficient of Dispersion and IQR/Median (CV like)
 	"""
 
-	q1 = float(np.percentile(x, 25, interpolation="lower"))
+	q1 = float(np.percentile(x, 25, method="lower"))
 	q2 = np.percentile(x, 50)
-	q3 = float(np.percentile(x, 75, interpolation="higher"))
+	q3 = float(np.percentile(x, 75, method="higher"))
 
 	if (q2 == 0) or ((q3+q1) == 0):
 		return min(x), q1, q2, q3, max(x), abs(q3-q1), 0, 0
@@ -818,7 +818,7 @@ def reduceEdges(workF, dataF, gephiF, corrh5, genesM, retainF=0.8, edgePG=3, pri
 			toKeep.extend(np.where(npA == val)[0])
 
 		#  Mask and reverse
-		mask = np.ones(len(npA), np.bool)
+		mask = np.ones(len(npA), bool)
 		mask[toKeep] = 0
 		npA[mask] = 0
 
