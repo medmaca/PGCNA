@@ -28,7 +28,7 @@ over the Louvain community detection method used originally.
 
 """
 __author__ = "Matthew Care"
-__version__ = "2.0.2"
+__version__ = "2.0.4"
 
 import sys
 import os
@@ -49,7 +49,9 @@ import h5py
 parser = argparse.ArgumentParser()
 #  Required
 parser.add_argument("-w", "--workFolder", help="Work Folder [REQUIRED]", default=None)
-parser.add_argument("-d", "--dataF", help="Expression data folder path [REQUIRED]", default=None)
+parser.add_argument(
+    "-d", "--dataF", help="Expression data folder path [REQUIRED]", default=None
+)
 
 #  Optional
 parser.add_argument(
@@ -58,9 +60,15 @@ parser.add_argument(
     help="File containing information about data files (must be in same folder as --dataF) [#FileInfo.txt]",
     default="#FileInfo.txt",
 )
-parser.add_argument("-s", "--fileSep", help="Separator used in expression file(s) [\t]", default="\t")
 parser.add_argument(
-    "-f", "--retainF", help="Retain gene fraction -- keeping most variant genes [0.8]", type=float, default=0.8
+    "-s", "--fileSep", help="Separator used in expression file(s) [\t]", default="\t"
+)
+parser.add_argument(
+    "-f",
+    "--retainF",
+    help="Retain gene fraction -- keeping most variant genes [0.8]",
+    type=float,
+    default=0.8,
 )
 parser.add_argument(
     "-g",
@@ -70,17 +78,33 @@ parser.add_argument(
     default=1 / 3.0,
 )
 parser.add_argument(
-    "-e", "--edgePG", help="Edges to keep per gene [3] -- Highly recommend leaving as default", type=int, default=3
+    "-e",
+    "--edgePG",
+    help="Edges to keep per gene [3] -- Highly recommend leaving as default",
+    type=int,
+    default=3,
 )
-parser.add_argument("-r", "--roundL", help="Decimal places to round to before edge reduction [3]", type=int, default=3)
+parser.add_argument(
+    "-r",
+    "--roundL",
+    help="Decimal places to round to before edge reduction [3]",
+    type=int,
+    default=3,
+)
 
 #  Not often changed
 parser.add_argument("--outF", help="Root output folder [PGCNA]", default="PGCNA")
-parser.add_argument("--corrMatF", help="Correlation matrix folder [CORR_MATRIX]", default="CORR_MATRIX")
 parser.add_argument(
-    "--corrMatFS", help="Folder for single gene correlation files [CORR_MATRIX_SG]", default="CORR_MATRIX_SG"
+    "--corrMatF", help="Correlation matrix folder [CORR_MATRIX]", default="CORR_MATRIX"
 )
-parser.add_argument("--gephiF", help="Folder to store files for Gephi [GEPHI]", default="GEPHI")
+parser.add_argument(
+    "--corrMatFS",
+    help="Folder for single gene correlation files [CORR_MATRIX_SG]",
+    default="CORR_MATRIX_SG",
+)
+parser.add_argument(
+    "--gephiF", help="Folder to store files for Gephi [GEPHI]", default="GEPHI"
+)
 
 #  Flags
 parser.add_argument(
@@ -89,11 +113,19 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "--usePearson", help="Use Pearson Correlation instead of Spearman [False] -- Flag", action="store_true"
+    "--usePearson",
+    help="Use Pearson Correlation instead of Spearman [False] -- Flag",
+    action="store_true",
 )
-parser.add_argument("--keepBigFA", help="Keep ALL big HDF5 files after finishing [False] -- Flag", action="store_true")
 parser.add_argument(
-    "--keepBigF", help="Keep median correlations HDF5 files after finishing [False] -- Flag", action="store_true"
+    "--keepBigFA",
+    help="Keep ALL big HDF5 files after finishing [False] -- Flag",
+    action="store_true",
+)
+parser.add_argument(
+    "--keepBigF",
+    help="Keep median correlations HDF5 files after finishing [False] -- Flag",
+    action="store_true",
 )
 parser.add_argument(
     "--ignoreDuplicates",
@@ -129,14 +161,44 @@ parser.add_argument(
 
 #  Leidenalg (community detection) specific
 parser.add_argument(
-    "-n", "--laNumber", dest="laRunNum", help="Number of times to run Leidenalg [100]", default=100, type=int
+    "-n",
+    "--laNumber",
+    dest="laRunNum",
+    help="Number of times to run Leidenalg [100]",
+    default=100,
+    type=int,
 )
 parser.add_argument(
-    "-b", dest="laBestPerc", help="Copy top [10]  %% of clusterings into lBaseFold/BEST folder", default=10, type=int
+    "-b",
+    dest="laBestPerc",
+    help="Copy top [10]  %% of clusterings into lBaseFold/BEST folder",
+    default=10,
+    type=int,
 )
-parser.add_argument("--lBaseFold", dest="lBaseFold", help="Leidenalg base folder [LEIDENALG]", default="LEIDENALG")
 parser.add_argument(
-    "--lClustTxtFold", dest="lClustTxtFold", help="Leidenalg Clusters text folders [ClustersTxt]", default="ClustersTxt"
+    "--useCPM",
+    help="Use Constant Potts Model (CPM) quality function [False] -- Flag",
+    action="store_true",
+)
+parser.add_argument(
+    "--cpmRes",
+    dest="cpmRes",
+    help="Constant Potts Model (CPM) resolution parameter [0.00025]",
+    default=0.00025,
+    type=float,
+)
+
+parser.add_argument(
+    "--lBaseFold",
+    dest="lBaseFold",
+    help="Leidenalg base folder [LEIDENALG]",
+    default="LEIDENALG",
+)
+parser.add_argument(
+    "--lClustTxtFold",
+    dest="lClustTxtFold",
+    help="Leidenalg Clusters text folders [ClustersTxt]",
+    default="ClustersTxt",
 )
 parser.add_argument(
     "--lClustListFold",
@@ -227,9 +289,11 @@ settingInf = concatenateAsString(
     "Meta info file describing expression files [-m, --metaInf] = " + args.metaInf,
     "Separator used in expression file [-s, --fileSep] = " + args.fileSep,
     "Retain gene fraction [-f, --retainF] = " + str(args.retainF),
-    "Fraction of expression files gene required in to be retained [-g, --geneFrac] = " + str(args.geneFrac),
+    "Fraction of expression files gene required in to be retained [-g, --geneFrac] = "
+    + str(args.geneFrac),
     "Edges to retain per gene [-e, --edgePG] = " + str(args.edgePG),
-    "Decimal places to round to before edge reduction [-r, --roundL] = " + str(args.roundL),
+    "Decimal places to round to before edge reduction [-r, --roundL] = "
+    + str(args.roundL),
     "\n#  Main Folders" "Root output folder [--outF] = " + args.outF,
     "Correlation matrix folder [--corrMatF] = " + args.corrMatF,
     "Single Gene Correlation files folder [--corrMatFS] = " + args.corrMatFS,
@@ -238,20 +302,26 @@ settingInf = concatenateAsString(
     "Don't run Fast Unfolding clustering [--noLeidenalg] = " + str(args.noLeidenalg),
     "Use Pearson Correlation [--usePearson] = " + str(args.usePearson),
     "Keep all big HDF5 files after run [--keepBigFA] = " + str(args.keepBigFA),
-    "Keep median correlations HDF5 files after run [--keepBigF] = " + str(args.keepBigF),
+    "Keep median correlations HDF5 files after run [--keepBigF] = "
+    + str(args.keepBigF),
     "Ignore correlation duplicates when cutting top --edgePG genes [--ignoreDuplicates] = "
     + str(args.ignoreDuplicates),
     "Output individual gene correlation files [--singleCorr] = " + str(args.singleCorr),
     "Output individual gene correlation files for select list (--singleCorrListF) [--singleCorrL] = "
     + str(args.singleCorrL),
     "\n#  Single gene correlation options",
-    "List of genes to process if --singleCorrL [--singleCorrListF]:\t" + str(args.singleCorrListF),
+    "List of genes to process if --singleCorrL [--singleCorrListF]:\t"
+    + str(args.singleCorrListF),
     "\n#  Correlation Options",
-    "Chunk size (rows) to split correlation over [--corrChunk]:\t" + str(args.corrChunk),
+    "Chunk size (rows) to split correlation over [--corrChunk]:\t"
+    + str(args.corrChunk),
     "\n#  Leidenalg Specific",
     "Random seed:\t" + str(args.randSeed),
     "Run number [-n, --laNumber]:\t" + str(args.laRunNum),
-    "Copy top % of clusterings into *_BEST folder [-b, --laBestPerc]:\t" + str(args.laBestPerc),
+    "Use Constant Potts Model [--useCPM] = " + str(args.useCPM),
+    "Constant Potts Model resolution parameter [--cpmRes] = " + str(args.cpmRes),
+    "Copy top % of clusterings into *_BEST folder [-b, --laBestPerc]:\t"
+    + str(args.laBestPerc),
     "Base folder [--lBaseFold] = " + str(args.lBaseFold),
     "Clusters text folder [--lClustTxtFold] = " + str(args.lClustTxtFold),
     "Clusters List folder [--lClustListFold] = " + str(args.lClustListFold),
@@ -259,7 +329,9 @@ settingInf = concatenateAsString(
 
 settingsF = open(
     os.path.join(
-        OUT_FOLDER, str(datetime.now()).replace(" ", "-").replace(":", ".")[:-7] + "_CorrelationSettingsInfo.txt"
+        OUT_FOLDER,
+        str(datetime.now()).replace(" ", "-").replace(":", ".")[:-7]
+        + "_CorrelationSettingsInfo.txt",
     ),
     "w",
 )
@@ -288,8 +360,8 @@ def make_key_naturalSort():
     """
 
     def nSort(s):
-        convert = lambda text: int(text) if text.isdigit() else text
-        alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
+        def convert(text): return int(text) if text.isdigit() else text
+        def alphanum_key(key): return [convert(c) for c in re.split("([0-9]+)", key)]
 
         return alphanum_key(s)
 
@@ -317,7 +389,16 @@ def dataSpread(x):
     if (q2 == 0) or ((q3 + q1) == 0):
         return min(x), q1, q2, q3, max(x), abs(q3 - q1), 0, 0
     else:
-        return min(x), q1, q2, q3, max(x), abs(q3 - q1), abs((q3 - q1) / (q3 + q1)), abs((q3 - q1) / q2)
+        return (
+            min(x),
+            q1,
+            q2,
+            q3,
+            max(x),
+            abs(q3 - q1),
+            abs((q3 - q1) / (q3 + q1)),
+            abs((q3 - q1) / q2),
+        )
 
 
 def mad(arr):
@@ -330,12 +411,17 @@ def mad(arr):
 
 
 def loadCorrGeneList(workF, listFN, defaultG="IRF4"):
-
     print("\nLoading list of genes for single correlation file output")
     fileP = os.path.join(workF, listFN)
 
     if not os.path.exists(fileP):
-        print("\t\t", fileP, "does not exist, will create file and add default gene (", defaultG, ")")
+        print(
+            "\t\t",
+            fileP,
+            "does not exist, will create file and add default gene (",
+            defaultG,
+            ")",
+        )
         outF = open(fileP, "w")
         print(defaultG, file=outF)
         outF.close()
@@ -358,6 +444,7 @@ def generateGeneMeta(outF, fileN, geneMetaInfo, genesNP, npA):
     """
     Generate meta information for gene
     """
+
     ###########################################################################################
     def expToPercentiles(expToPerc, expA):
         return [expToPerc[e] for e in expA]
@@ -403,13 +490,16 @@ def mergeMetaInfo(geneMetaInfo):
     for gene in geneMetaInfo:
         medians, qcods, percentiles = zip(*geneMetaInfo[gene])
         #  Store Median_QCOD(varWithin), MedianPercentile, MADpercentile(VarAcross)
-        medianMetaInfo[gene] = [np.median(qcods), np.median(percentiles), mad(percentiles)]
+        medianMetaInfo[gene] = [
+            np.median(qcods),
+            np.median(percentiles),
+            mad(percentiles),
+        ]
 
     return medianMetaInfo
 
 
 def loadMeta(metaFile, dataF, splitBy="\t", headerL=1):
-
     print("\n\nLoad meta-file (", os.path.basename(metaFile), ")", sep="")
     if not os.path.exists(metaFile):
         print("\t\t# Meta file (", metaFile, ") does not exist!", sep="")
@@ -429,12 +519,21 @@ def loadMeta(metaFile, dataF, splitBy="\t", headerL=1):
 
         totalPath = os.path.join(dataF, cols[0])
         if not os.path.exists(totalPath):
-            print("\t\t# File (", totalPath, ") does not exist!, won't add to fileInfo", sep="")
+            print(
+                "\t\t# File (",
+                totalPath,
+                ") does not exist!, won't add to fileInfo",
+                sep="",
+            )
         else:
             try:
                 fileInfo[totalPath] = int(cols[1])
             except:
-                print("Meta file line (", line.rstrip(), ") is not formed properly, skipping")
+                print(
+                    "Meta file line (",
+                    line.rstrip(),
+                    ") is not formed properly, skipping",
+                )
 
     print("\tLoaded information on:", len(fileInfo), "files")
     return fileInfo
@@ -466,7 +565,13 @@ def getGenes(metaInf, splitBy="\t", geneFrac=1 / 3.0, retainF=0.8):
         print("\tReading expression data file:", fileN)
 
         for i, line in enumerate(open(fileP)):
-            cols = line.rstrip().replace('"', "").replace("'", "").replace(" ", "").split(splitBy)
+            cols = (
+                line.rstrip()
+                .replace('"', "")
+                .replace("'", "")
+                .replace(" ", "")
+                .split(splitBy)
+            )
 
             if headerL:
                 headerL -= 1
@@ -521,9 +626,7 @@ def getGenes(metaInf, splitBy="\t", geneFrac=1 / 3.0, retainF=0.8):
         print("\t\t\tPre-cut shape:", npA.shape)
 
         #  Retain most variant
-        npA = npA[
-            :cutPos,
-        ].astype(np.float64)
+        npA = npA[:cutPos,].astype(np.float64)
         genesNP = genesNP[:cutPos]
         print("\t\t\tPost-cut shape:", npA.shape)
 
@@ -534,7 +637,15 @@ def getGenes(metaInf, splitBy="\t", geneFrac=1 / 3.0, retainF=0.8):
     print("\n\tTotal unique genes/identifiers:", len(geneCount))
 
     requiredFileNum = int(round(geneFrac * len(metaInf), 0))
-    print("\tRetaining genes present in ", round(geneFrac, 2), " (>=", requiredFileNum, ") of files : ", end="", sep="")
+    print(
+        "\tRetaining genes present in ",
+        round(geneFrac, 2),
+        " (>=",
+        requiredFileNum,
+        ") of files : ",
+        end="",
+        sep="",
+    )
 
     genesToKeep = {}
     for g in geneCount:
@@ -547,7 +658,6 @@ def getGenes(metaInf, splitBy="\t", geneFrac=1 / 3.0, retainF=0.8):
 
 
 def loadHDF5files(outF, hdf5Paths):
-
     hdf5Files = {}
     for fileN in hdf5Paths:
         hdf5Files[fileN] = h5py.File(fileN, "r")
@@ -556,7 +666,6 @@ def loadHDF5files(outF, hdf5Paths):
 
 
 def generateMasks(sortedKeepGenes, genesPerHDF5, hdf5paths):
-
     print("\tGenerating index mappings and masks to speed up combining correlations")
 
     masks = np.zeros((len(hdf5paths), len(sortedKeepGenes)))
@@ -611,7 +720,9 @@ def generateCorrMatrix(
 
     geneMetaInfo = defaultdict(list)  # Per data-set store gene meta information
     genePosPerHDF5 = defaultdict(dict)  # Mapping of location of gene in HDF5 file
-    perHDF5index = defaultdict(list)  # Mapping of gene to where they should be in final matrix
+    perHDF5index = defaultdict(
+        list
+    )  # Mapping of gene to where they should be in final matrix
     genesPerHDF5 = defaultdict(dict)  # Keep tally of which genes are in which HDF5 file
     hdf5paths = []
 
@@ -631,7 +742,13 @@ def generateCorrMatrix(
         print("\tReading expression data file:", fileN)
 
         for i, line in enumerate(open(fileP)):
-            cols = line.rstrip().replace('"', "").replace("'", "").replace(" ", "").split(splitBy)
+            cols = (
+                line.rstrip()
+                .replace('"', "")
+                .replace("'", "")
+                .replace(" ", "")
+                .split(splitBy)
+            )
 
             if headerL:
                 headerL -= 1
@@ -684,11 +801,15 @@ def generateCorrMatrix(
         print("\t\t\tMarix shape:", npA.shape)
 
         #  Output genes
-        outMatrixN = os.path.join(outF, fileN + "_RetainF" + str(retainF) + "_Genes.txt")
+        outMatrixN = os.path.join(
+            outF, fileN + "_RetainF" + str(retainF) + "_Genes.txt"
+        )
         np.savetxt(outMatrixN, genesNP, fmt="%s", delimiter="\t")
 
         #  Generate gene meta information
-        generateGeneMeta(outF, fileN + "_RetainF" + str(retainF), geneMetaInfo, genesNP, npA)
+        generateGeneMeta(
+            outF, fileN + "_RetainF" + str(retainF), geneMetaInfo, genesNP, npA
+        )
 
         #######################################
         # Calculate correlations
@@ -752,11 +873,15 @@ def generateCorrMatrix(
         if len(hdf5paths) == 1:
             #  If we're only analysing a single data-set
             if not (singleCorr or singleCorrL):
-                print("\t\tOnly single data-set analysed, skipping generating median correlations")
+                print(
+                    "\t\tOnly single data-set analysed, skipping generating median correlations"
+                )
                 #  No need to calculate median correlations, just return path to HDF5 file and genes matrix
                 return outMatrixHDF5_orig, genesNP
             else:
-                print("\t\tOnly single data-set analysed, but --singeCorr/--singleCorrL so will proceed with output")
+                print(
+                    "\t\tOnly single data-set analysed, but --singeCorr/--singleCorrL so will proceed with output"
+                )
 
         printEvery = int(round(len(genesToKeep) / float(printEveryDiv), 0))
         printE = printEvery
@@ -766,7 +891,9 @@ def generateCorrMatrix(
         #  Create HDF5 median correlation matrix
 
         with h5py.File(outMatrixHDF5, "w") as f:
-            h5 = f.create_dataset("corr", (len(genesToKeep), len(genesToKeep)), dtype="f8")
+            h5 = f.create_dataset(
+                "corr", (len(genesToKeep), len(genesToKeep)), dtype="f8"
+            )
         h5 = h5py.File(outMatrixHDF5, "r+")
 
         # Load HDF5 correlation files
@@ -779,7 +906,12 @@ def generateCorrMatrix(
         #  Get masks
         maskMappings = generateMasks(sortedKeepGenes, genesPerHDF5, hdf5paths)
 
-        print("\tCalculating median correlations (report every 1/", printEveryDiv, "th of total):", sep="")
+        print(
+            "\tCalculating median correlations (report every 1/",
+            printEveryDiv,
+            "th of total):",
+            sep="",
+        )
         if singleCorr or singleCorrL:
             print("\t\tOutputting single gene correlation files:")
 
@@ -800,7 +932,9 @@ def generateCorrMatrix(
             #  Grab row for gene across files
             for i, hdf5 in enumerate(hdf5paths):
                 try:
-                    rowsPerHDF5[hdf5] = hdf5Files[hdf5]["corr"][genePosPerHDF5[gene][hdf5]]
+                    rowsPerHDF5[hdf5] = hdf5Files[hdf5]["corr"][
+                        genePosPerHDF5[gene][hdf5]
+                    ]
                     maskPos.append(i)
                     dataSetNames.append(os.path.basename(hdf5)[:-3])
                 except:
@@ -808,9 +942,13 @@ def generateCorrMatrix(
 
             #  Second pass
             #  Convert to numpy array
-            npA = np.full((len(rowsPerHDF5), len(sortedKeepGenes)), -10, dtype=np.float64)  # Missing set to -10
+            npA = np.full(
+                (len(rowsPerHDF5), len(sortedKeepGenes)), -10, dtype=np.float64
+            )  # Missing set to -10
             for i, hdf5 in enumerate(sorted(rowsPerHDF5, key=natSort)):
-                npA[i][perHDF5index[hdf5]] = rowsPerHDF5[hdf5]  # Use indexes to place in correct location
+                npA[i][perHDF5index[hdf5]] = rowsPerHDF5[
+                    hdf5
+                ]  # Use indexes to place in correct location
 
             #  Get appropriate masks
             tempMask = []
@@ -826,7 +964,9 @@ def generateCorrMatrix(
             ###########################################################################################
             ##-------------------------------SINGLE GENE CORR----------------------------------------##
             ###########################################################################################
-            def mergeCorrData(gene, corrInf, medianMetaInfo, medianCorr, missingVal=-10):
+            def mergeCorrData(
+                gene, corrInf, medianMetaInfo, medianCorr, missingVal=-10
+            ):
                 finalCorrs = []
                 dataSetCount = 0
 
@@ -837,8 +977,10 @@ def generateCorrMatrix(
                         finalCorrs.append(str(round(corr, decimalP)))
                         dataSetCount += 1
 
-                roundedMeta = map(str, [round(origV, decimalP) for origV in medianMetaInfo[gene]])
-                scaledCorr = dataSetCount ** medianCorr
+                roundedMeta = map(
+                    str, [round(origV, decimalP) for origV in medianMetaInfo[gene]]
+                )
+                scaledCorr = dataSetCount**medianCorr
                 finalInfo = (
                     gene
                     + "\t"
@@ -863,7 +1005,11 @@ def generateCorrMatrix(
 
                 subFolder = os.path.join(outFS, gene[0])
                 singleCorrFName = os.path.join(
-                    subFolder, str(makeSafeFilename(gene)) + "_corr_RetainF" + str(retainF) + ".txt.gz"
+                    subFolder,
+                    str(makeSafeFilename(gene))
+                    + "_corr_RetainF"
+                    + str(retainF)
+                    + ".tsv.gz",
                 )
                 if os.path.exists(singleCorrFName):
                     continue
@@ -874,7 +1020,9 @@ def generateCorrMatrix(
                 if not os.path.exists(subFolder):
                     os.makedirs(subFolder)
 
-                singleCorrF = gzip.open(singleCorrFName, "wt", compresslevel=9)  # "wb" in py2
+                singleCorrF = gzip.open(
+                    singleCorrFName, "wt", compresslevel=9
+                )  # "wb" in py2
                 dataSetsH = "\t".join(dataSetNames)
 
                 if usePearson:
@@ -894,7 +1042,9 @@ def generateCorrMatrix(
 
                 rankedByCorr = defaultdict(list)
                 for i, g in enumerate(sortedKeepGenes):
-                    scaledCorr, info = mergeCorrData(g, npA.T[i], medianMetaInfo, medianRowCorr[keepGeneMapping[g]])
+                    scaledCorr, info = mergeCorrData(
+                        g, npA.T[i], medianMetaInfo, medianRowCorr[keepGeneMapping[g]]
+                    )
                     rankedByCorr[scaledCorr].append(info)
 
                 #  Rank by scaledCorr
@@ -983,8 +1133,12 @@ def reduceEdges(
     outF = os.path.join(workF, gephiF)
     if not os.path.exists(outF):
         os.makedirs(outF)
-    nodesFP = os.path.join(outF, fileN + "_RetainF" + str(retainF) + "_EPG" + str(edgePG) + "_Nodes.tsv.gz")
-    edgesFP = os.path.join(outF, fileN + "_RetainF" + str(retainF) + "_EPG" + str(edgePG) + "_Edges.tsv.gz")
+    nodesFP = os.path.join(
+        outF, fileN + "_RetainF" + str(retainF) + "_EPG" + str(edgePG) + "_Nodes.tsv.gz"
+    )
+    edgesFP = os.path.join(
+        outF, fileN + "_RetainF" + str(retainF) + "_EPG" + str(edgePG) + "_Edges.tsv.gz"
+    )
     if os.path.exists(nodesFP) and os.path.exists(edgesFP):
         print("\t\tEdge reduction files already exist, skipping")
         return edgesFP, nodesFP
@@ -1043,7 +1197,9 @@ def reduceEdges(
     nodesFile.close()
 
     #  Second, output list of edges
-    print("\tCreate edges file (report every 1/", printEveryDiv, "th of total):", sep="")
+    print(
+        "\tCreate edges file (report every 1/", printEveryDiv, "th of total):", sep=""
+    )
     edgesFile = gzip.open(edgesFP, "wt", compresslevel=9)
     print("Source\tTarget\tWeight\tType\tfromAltName\ttoAltName", file=edgesFile)
 
@@ -1062,7 +1218,16 @@ def reduceEdges(
                 if not (geneO + "-@@@-" + geneT) in seen:
                     #  Output info
                     if not item == 0:
-                        print(geneO, geneT, item, "undirected", geneO, geneT, sep="\t", file=edgesFile)
+                        print(
+                            geneO,
+                            geneT,
+                            item,
+                            "undirected",
+                            geneO,
+                            geneT,
+                            sep="\t",
+                            file=edgesFile,
+                        )
                         printedLines += 1
 
                         #  Store the fact that we've see this and it's equivalent pair
@@ -1096,6 +1261,8 @@ def runleidenalgF(
     removeExisting=True,
     allFold="ALL",
     bestFold="BEST",
+    useCPM=False,
+    cpmRes=0.00025,
 ):
     """
     Convert edges into igraph (https://igraph.org/python/) format and then carry out community detection using the python Leidenalg package (https://github.com/vtraag/leidenalg).  This is an improvement
@@ -1103,7 +1270,9 @@ def runleidenalgF(
     """
     ###########################################################################################
 
-    def convertGephiToIgraph(gephiEdgeFile, splitBy="\t", header=1, outN="igraphG.temp"):
+    def convertGephiToIgraph(
+        gephiEdgeFile, splitBy="\t", header=1, outN="igraphG.temp"
+    ):
         """
         Convert edge file into format for import to igraph
         """
@@ -1189,17 +1358,38 @@ def runleidenalgF(
             os.makedirs(outFoldLS)
 
         seed = random.randint(
-            0, 1e9
-        )  # Generate random seed as leidenalg doesn't appear to do this (even though it says it does)
-        partition = la.find_partition(
-            g, la.ModularityVertexPartition, weights=graphWeights, n_iterations=-1, seed=seed
-        )  # n_iterations=-1 to converge on best local result
+            0, int(1e9)
+            # Generate random seed as leidenalg doesn't appear to do this (even though it says it does)
+        )
+
+        if useCPM:
+            # Partition based on Constant Potts Model (CPM)
+            partition = la.find_partition(
+                g,
+                la.CPMVertexPartition,
+                resolution_parameter=cpmRes,
+                weights=graphWeights,
+                n_iterations=-1,
+                seed=seed,
+            )  # n_iterations=-1 to converge on best local result
+        else:
+            # Partition based on Modularity Score
+            partition = la.find_partition(
+                g,
+                la.ModularityVertexPartition,
+                weights=graphWeights,
+                n_iterations=-1,
+                seed=seed,
+            )  # n_iterations=-1 to converge on best local result
+
         modScore = partition.modularity
 
         modInfo.append([modScore, partition.sizes()])
         modInfoScores[modScore].append(rNum)
         #  Output cluster membership and store for generating co-asociation matrix
-        infoPerClustering.append(outputModules(outFoldT, outFoldLS, partition, runNum=rNum))
+        infoPerClustering.append(
+            outputModules(outFoldT, outFoldLS, partition, runNum=rNum)
+        )
         #  Inform user of position
         count += 1
         if count == printE:
@@ -1220,7 +1410,15 @@ def runleidenalgF(
     modInfoF = open(os.path.join(wF, baseFold, "moduleInfoAll.txt"), "w")
     print("Mod#\tModularityScore\tAvgModSize\tModuleNum\tModuleSizes", file=modInfoF)
     for i, inf in enumerate(modInfo):
-        print(i + 1, inf[0], sum(inf[1]) / float(len(inf[1])), len(inf[1]), inf[1], sep="\t", file=modInfoF)
+        print(
+            i + 1,
+            inf[0],
+            sum(inf[1]) / float(len(inf[1])),
+            len(inf[1]),
+            inf[1],
+            sep="\t",
+            file=modInfoF,
+        )
     modInfoF.close()
 
     if runNum > 1:
@@ -1251,7 +1449,9 @@ def runleidenalgF(
         copyNum = 0
 
         modInfoF = open(os.path.join(wF, baseFold, "moduleInfoBest.txt"), "w")
-        print("Mod#\tModularityScore\tAvgModSize\tModuleNum\tModuleSizes", file=modInfoF)
+        print(
+            "Mod#\tModularityScore\tAvgModSize\tModuleNum\tModuleSizes", file=modInfoF
+        )
         for mScore in sorted(modInfoScores, reverse=True):
             if copyNum >= copyNumber:
                 break
@@ -1261,16 +1461,28 @@ def runleidenalgF(
 
                 #  Write best module information
                 inf = modInfo[clustNum - 1]
-                print(clustNum, inf[0], sum(inf[1]) / float(len(inf[1])), len(inf[1]), inf[1], sep="\t", file=modInfoF)
+                print(
+                    clustNum,
+                    inf[0],
+                    sum(inf[1]) / float(len(inf[1])),
+                    len(inf[1]),
+                    inf[1],
+                    sep="\t",
+                    file=modInfoF,
+                )
 
                 #  Store best info per cluster info
                 infoPerClusteringBest.append(infoPerClustering[clustNum - 1])
 
                 #  Copy best results to bestFold
                 textName = str(clustNum) + ".csv"
-                shutil.copy(os.path.join(outFoldT, textName), os.path.join(outFoldTB, textName))
+                shutil.copy(
+                    os.path.join(outFoldT, textName), os.path.join(outFoldTB, textName)
+                )
                 listName = "Clust" + str(clustNum)
-                shutil.copytree(os.path.join(outFoldL, listName), os.path.join(outFoldLB, listName))
+                shutil.copytree(
+                    os.path.join(outFoldL, listName), os.path.join(outFoldLB, listName)
+                )
 
                 #  Increment number copied
                 copyNum += 1
@@ -1285,7 +1497,6 @@ def runleidenalgF(
 
 
 def main(finishT="Finished!"):
-
     if args.singleCorrL:
         singleCorrList = loadCorrGeneList(args.workFolder, args.singleCorrListF)
     else:
@@ -1295,7 +1506,9 @@ def main(finishT="Finished!"):
     metaInf = loadMeta(args.metaInf, args.dataF)
 
     #  Find genes present in each data-set
-    genesToKeep, requireFileNum = getGenes(metaInf, splitBy=args.fileSep, geneFrac=args.geneFrac, retainF=args.retainF)
+    genesToKeep, requireFileNum = getGenes(
+        metaInf, splitBy=args.fileSep, geneFrac=args.geneFrac, retainF=args.retainF
+    )
 
     #  Generate correlation HDF5 files
     corrh5, genesM = generateCorrMatrix(
@@ -1342,10 +1555,14 @@ def main(finishT="Finished!"):
             baseFold=args.lBaseFold,
             outFoldTorig=args.lClustTxtFold,
             outFoldLorig=args.lClustListFold,
+            useCPM=args.useCPM,
+            cpmRes=args.cpmRes,
         )
 
     else:
-        print("\nSkipping Leidenalg community detection and downstream output as --noLeidenalg is set")
+        print(
+            "\nSkipping Leidenalg community detection and downstream output as --noLeidenalg is set"
+        )
     print(finishT)
 
 

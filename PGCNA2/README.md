@@ -166,6 +166,22 @@ For instance to run 10,000 clusterings and retain the top 20%:
 ./pgcna2.py -w workFolderPath -d expressionFilesFolderPath -n 1e4 -b 20
 ```
 
+##### Constant Potts Model (CPM)
+
+By default PGCNA will carry out community detection using the leidenalg ModularityVertexPartition for optimisation.  You can use the Constant Potts Model by setting the **--useCPM** flag, for instance:
+
+```
+./pgcna2.py -w workFolderPath -d expressionFilesFolderPath --useCPM
+```
+
+The CPM resolution parameter can be set **--cpmRes** (default 0.00025), e.g.:
+
+```
+./pgcna2.py -w workFolderPath -d expressionFilesFolderPath --useCPM --cpmRes 0.0001
+```
+
+The smaller the value of **--cpmRes** the fewer communities will be recovered.
+
 #### Options specific to processing multiple expression files
 
 If pgcna2.py is processing multiple expression files it merges the correlations across data-sets by calculating a gene's median correlation across all data-sets that contain that gene.  During this process if the user wants pgcna2.py can output a folder containing a single file per gene in the median correlation matrix.  This file shows the correlations between that single gene and all other genes across the different data-sets, allowing the user to see if the data-sets have a good level of agreement, and potentially highlighting outliers.
@@ -252,11 +268,11 @@ Can also use built in help flag:
 |---|---|---|
 |-n, --laNumber|Number of times to run **leidenalg** method|100|
 |-b, --laBestPerc|Percentage of best (based on leidenalg modularity) clusterings to copy to lBaseFold/BEST |10|
+|--useCPM| Use the Constant Potts Model (CPM) for community detection | False |
+|--cpmRes| Constant Potts Model (CPM) resolution parameter | 0.00025 |
 |--lBaseFold|Base folder for leidenalg|"LEIDENALG"|
 |--lClustTxtFold|Leidenalg Clusters text folders |ClustersTxt|
 |--lClustListFold|Leidenalg Clusters module list folder |ClustersLists|
-
-
 
 ### Output
 
